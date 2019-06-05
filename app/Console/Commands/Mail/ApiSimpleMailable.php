@@ -37,6 +37,9 @@ class ApiSimpleMailable extends Command
      */
     public function handle()
     {
+        $swiftMailer = \Mail::getSwiftMailer();
+        $swiftMailer->registerPlugin(new MailTracker());
+        \Mail::setSwiftMailer($swiftMailer);
         \Mail::to(env('AUTHOR_EMAIL'), 'tester')
             ->cc("ichikawa.shingo.0829+cc@gmail.com")
             ->bcc("ichikawa.shingo.0829+bcc@gmail.com")
