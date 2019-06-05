@@ -3,9 +3,11 @@
 namespace App\Console\Commands\Mail;
 
 use Illuminate\Console\Command;
+use Illuminate\Mail\Mailer;
 use Illuminate\Mail\Message;
 use Sichikawa\LaravelSendgridDriver\SendGrid;
 use Sichikawa\LaravelSendgridDriver\Transport\SendgridTransport;
+use Swift_Events_SendEvent;
 
 class ApiSimple extends Command
 {
@@ -42,10 +44,16 @@ class ApiSimple extends Command
      */
     public function handle()
     {
-        app('mailer')->send([], [], function (Message $message) {
+        /** @var Mailer $mailer */
+        $mailer = app('mailer');
+        $swiftMailer = $mailer->getSwiftMailer();
+        $swiftMailer->registerPlugin(new MailTracker());
+        $mailer->setSwiftMailer($swiftMailer);
+        $mailer->send([], [], function (Message $message) {
             $message
                 ->subject('[Sample] simple mail.')
-                ->to('dumy@example.com')
+                ->to('ichikawa.shingo.0829+reply@gmail.com')
+                ->from("ichikawa.shingo.0829@gmail.com", "Shingo Ichikawa")
                 ->replyTo('ichikawa.shingo.0829+reply@gmail.com')
                 ->embedData(self::sgEncode([
                     'personalizations' => [
@@ -62,5 +70,26 @@ class ApiSimple extends Command
                     'template_id' => config('services.sendgrid.templates.dynamic_sample')
                 ]), SendgridTransport::SMTP_API_NAME);
         });
+    }
+}
+
+class MailTracker implements \Swift_Events_SendListener
+{
+    /**
+     * Invoked immediately before the Message is sent.
+     *
+     * @param Swift_Events_SendEvent $evt
+     */
+    public function beforeSendPerformed(Swift_Events_SendEvent $evt)
+    {
+    }
+    /**
+     * Invoked immediately after the Message is sent.
+     *
+     * @param Swift_Events_SendEvent $evt
+     */
+    public function sendPerformed(Swift_Events_SendEvent $evt)
+    {
+        \Log::info('X-Message-ID:' . $evt->getMessage()->getHeaders()->get('X-Message-Id')->getFieldBody());
     }
 }
