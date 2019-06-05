@@ -46,9 +46,7 @@ class ApiSimple extends Command
     {
         /** @var Mailer $mailer */
         $mailer = app('mailer');
-        $swiftMailer = $mailer->getSwiftMailer();
-        $swiftMailer->registerPlugin(new MailTracker());
-        $mailer->setSwiftMailer($swiftMailer);
+        $mailer->getSwiftMailer()->registerPlugin(new MailTracker());
         $mailer->send([], [], function (Message $message) {
             $message
                 ->subject('[Sample] simple mail.')
